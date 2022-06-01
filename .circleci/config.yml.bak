@@ -1,0 +1,37 @@
+version: 2.1
+
+orbs:
+  aws-ecr: circleci/aws-ecr@8.1.2
+  aws-ecs: circleci/aws-ecs@2.2.1
+
+jobs:
+  run_tests:
+    docker:
+      - image: circleci/node:10.16.3
+    steps:
+      - run:
+          name: update-npm
+          command: 'ls -lah'
+
+workflows:
+  version: 2
+  build_deploy:
+    jobs:
+      - run_tests
+      - aws-ecr/build-and-push-image:
+          repo: "${AWS_ECR_REPO_NAME}"
+          tag: "${CIRCLE_SHA1}"
+          filters:
+            branches:
+              only:
+                - master
+      - aws-ecs/deploy-service-update:
+          requires:
+            - aws-ecr/build-and-push-image
+          family: "${AWS_RESOURCE_NAME_PREFIX}-service"
+          cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
+          container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_SHA1}"
+          filters:
+            branches:
+              only:
+                - master

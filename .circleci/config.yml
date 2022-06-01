@@ -1,37 +1,59 @@
 version: 2.1
-
-orbs:
-  aws-ecr: circleci/aws-ecr@8.1.2
-  aws-ecs: circleci/aws-ecs@2.2.1
-
 jobs:
-  run_tests:
+  # running commands on a basic image
+  Hello-World:
     docker:
-      - image: circleci/node:10.16.3
+      - image: alpine:3.15
     steps:
       - run:
-          name: update-npm
-          command: 'ls -lah'
+          name: Saying Hello
+          command: |
+            echo 'Hello World!'
+            echo 'This is the delivery pipeline'
+  # fetching code from the repo
+  Fetch-Code:
+    docker:
+      - image: cimg/base:2021.04
+    steps:
+      - checkout
+      - run:
+          name: Getting the Code
+          command: |
+            ls -al
+            echo '^^^Your repo files^^^'
+  # running a node container
+  Using-Node:
+    docker:
+      - image: cimg/node:17.2
+    steps:
+      - run:
+          name: Running the Node Container
+          command: |
+            node -v
+  Now-Complete:
+    docker:
+      - image: alpine:3.15
+    steps:
+      - run:
+          name: Approval Complete
+          command: |
+            echo 'The work is now complete.'
 
 workflows:
-  version: 2
-  build_deploy:
+  Example-Workflow:
     jobs:
-      - run_tests
-      - aws-ecr/build-and-push-image:
-          repo: "${AWS_ECR_REPO_NAME}"
-          tag: "${CIRCLE_SHA1}"
-          filters:
-            branches:
-              only:
-                - master
-      - aws-ecs/deploy-service-update:
+      - Hello-World
+      - Fetch-Code:
           requires:
-            - aws-ecr/build-and-push-image
-          family: "${AWS_RESOURCE_NAME_PREFIX}-service"
-          cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
-          container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_SHA1}"
-          filters:
-            branches:
-              only:
-                - master
+            - Hello-World
+      - Using-Node:
+          requires:
+            - Fetch-Code
+      - Hold-for-Approval:
+          type: approval
+          requires:
+            - Using-Node
+            - Fetch-Code
+      - Now-Complete:
+          requires:
+            - Hold-for-Approval
