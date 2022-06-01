@@ -17,6 +17,7 @@ workflows:
   version: 2
   build_deploy:
     jobs:
+      - run_tests
       - aws-ecr/build-and-push-image:
           repo: "${AWS_ECR_REPO_NAME}"
           tag: "${CIRCLE_SHA1}"
