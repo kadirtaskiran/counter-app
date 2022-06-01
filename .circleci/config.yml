@@ -4,6 +4,15 @@ orbs:
   aws-ecr: circleci/aws-ecr@8.1.2
   aws-ecs: circleci/aws-ecs@2.2.1
 
+jobs:
+  run_tests:
+    docker:
+      - image: circleci/node:10.16.3
+    steps:
+      - run:
+          name: update-npm
+          command: 'ls -lah'
+
 workflows:
   version: 2
   build_deploy:
