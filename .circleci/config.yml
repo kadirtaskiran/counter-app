@@ -1,59 +1,7 @@
 version: 2.1
-jobs:
-  # running commands on a basic image
-  Hello-World:
-    docker:
-      - image: alpine:3.15
-    steps:
-      - run:
-          name: Saying Hello
-          command: |
-            echo 'Hello World!'
-            echo 'This is the delivery pipeline'
-  # fetching code from the repo
-  Fetch-Code:
-    docker:
-      - image: cimg/base:2021.04
-    steps:
-      - checkout
-      - run:
-          name: Getting the Code
-          command: |
-            ls -al
-            echo '^^^Your repo files^^^'
-  # running a node container
-  Using-Node:
-    docker:
-      - image: cimg/node:17.2
-    steps:
-      - run:
-          name: Running the Node Container
-          command: |
-            node -v
-  Now-Complete:
-    docker:
-      - image: alpine:3.15
-    steps:
-      - run:
-          name: Approval Complete
-          command: |
-            echo 'The work is now complete.'
-
+orbs:
+    hello: circleci/hello-build@0.0.5
 workflows:
-  Example-Workflow:
-    jobs:
-      - Hello-World
-      - Fetch-Code:
-          requires:
-            - Hello-World
-      - Using-Node:
-          requires:
-            - Fetch-Code
-      - Hold-for-Approval:
-          type: approval
-          requires:
-            - Using-Node
-            - Fetch-Code
-      - Now-Complete:
-          requires:
-            - Hold-for-Approval
+    "Hello Workflow":
+        jobs:
+          - hello/hello-build
