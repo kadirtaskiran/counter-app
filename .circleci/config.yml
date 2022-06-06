@@ -12,9 +12,9 @@ jobs:
     steps:
       - checkout
       - node/install-packages
-      - run:
-          name: Run tests
-          command: npm test
+      #- run:
+      #    name: Run tests
+      #    command: npm test
       - run:
           name: Build app
           command: npm build
@@ -25,6 +25,8 @@ workflows:
     jobs:
       - run_tests
       - aws-ecr/build-and-push-image:
+          requires:
+            - run_tests
           repo: "${AWS_ECR_REPO_NAME}"
           tag: "${CIRCLE_SHA1}"
           filters:
