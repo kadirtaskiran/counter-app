@@ -3,30 +3,12 @@ version: 2.1
 orbs:
   aws-ecr: circleci/aws-ecr@8.1.2
   aws-ecs: circleci/aws-ecs@2.2.1
-  node: circleci/node@4.1
-
-jobs:
-  run_tests:
-    docker:
-      - image: cimg/node:15.1
-    steps:
-      - checkout
-      - node/install-packages
-      #- run:
-      #    name: Run tests
-      #    command: npm test
-      - run:
-          name: Build app
-          command: npm build
 
 workflows:
   version: 2
   build_deploy:
     jobs:
-      - run_tests
       - aws-ecr/build-and-push-image:
-          requires:
-            - run_tests
           repo: "${AWS_ECR_REPO_NAME}"
           tag: "${CIRCLE_SHA1}"
           filters:
@@ -36,9 +18,9 @@ workflows:
       - aws-ecs/deploy-service-update:
           requires:
             - aws-ecr/build-and-push-image
-          family: "${AWS_RESOURCE_NAME_PREFIX}-service"
+          family: "${AWS_RESOURCE_NAME_PREFIX}-ec2"
           cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
-          container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_SHA1}"
+          container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-cont,image=${AWS_ECR_REPO_URL},tag=${CIRCLE_SHA1}"
           filters:
             branches:
               only:
